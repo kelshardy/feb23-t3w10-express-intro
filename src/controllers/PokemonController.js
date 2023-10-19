@@ -1,5 +1,6 @@
 const express = require('express');
-
+const {checkForKelsey} = require('./PokemonMiddleware');
+const {body, validationResult} = require('express-validator');
 // create an instance of the Express router 
 
 const router = express.Router();
@@ -22,17 +23,39 @@ router.get("/:numberOfLePokemon", async (request, response) => {
 	});
 });
 
+/*
+router.post(
+    "/",
+    checkForKelsey,
+    someOtherMiddleware,
+    whateverMiddlewareWeCreated,
+    blahBlahBlah,
+    async (request, response) => {}
+)
+*/
 
 // POST /pokemon/
 // Body: {username:"kelsey", pokemonId:someNumber}
-router.post("/", async (request, response) => {
-	// let pokemonId = request.params.numberOfLePokemon;
+router.post("/", 
+// checkForKelsey, 
+body('username').trim().isLength({min: 4, max: 6}),
+async (request, response) => {
+	
+    const errors = validationResult(request);
+    if (!errors.isEmpty()){
+        return response.status(400).json({
+            message: "You dun goofed",
+            errors: errors.array()
+        });
+    }
+    // let pokemonId = request.params.numberOfLePokemon;
 
-	if (request.body.username != "kelsey"){
-		return response.json({
-			message:"You are not authorised!"
-		});
-	}
+	// if (request.body.username != "kelsey"){
+	// 	return response.json({
+	// 		message:"You are not authorised!"
+	// 	});
+	// }
+    console.log("Post with middleware has run!")
 
 	let result = await fetch("https://pokeapi.co/api/v2/pokemon/" + request.body.pokemonId);
 	let data = await result.json();
@@ -64,9 +87,10 @@ router.get("/bananas", async (request, response) => {
 
 // Create out of CRUD 
 router.post("/", (request, response) => {
+    console.log("Post with NO middleware has run!")
 	response.json({
 		message:"POST request received!"
-	})
+	});
 });
 
 module.exports = router;
